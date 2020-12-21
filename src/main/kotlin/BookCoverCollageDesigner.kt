@@ -15,13 +15,6 @@ class BookCoverCollageDesigner : RComponent<RProps, BookCoverCollageDesignerStat
 
     init {
         state = BookCoverCollageDesignerState()
-
-        // just for testing
-        state.selectedCovers = listOf(
-            "http://covers.openlibrary.org/b/id/8789903-M.jpg",
-            "http://covers.openlibrary.org/b/id/392533-M.jpg",
-            "http://covers.openlibrary.org/b/id/8237628-M.jpg"
-        )
     }
 
     override fun RBuilder.render() {
@@ -69,11 +62,7 @@ class BookCoverCollageDesigner : RComponent<RProps, BookCoverCollageDesignerStat
 
             child(SelectedCovers::class) {
                 attrs {
-                    selectedCovers = state.selectedCovers.sortedBy {
-                        it
-                    }.map {
-                        DrawableImage(it)
-                    }
+                    selectedCovers = state.selectedCovers.sortedBy { it }
                     width = "800px"
                     height = "800px"
                 }
@@ -82,6 +71,7 @@ class BookCoverCollageDesigner : RComponent<RProps, BookCoverCollageDesignerStat
             styledButton {
                 attrs {
                     onClickFunction = {
+                        ImageCache.clear()
                         setState {
                             selectedCovers = emptyList()
                         }
