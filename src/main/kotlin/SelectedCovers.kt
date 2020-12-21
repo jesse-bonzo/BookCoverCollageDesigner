@@ -128,14 +128,20 @@ class SelectedCovers : RComponent<SelectedCoversProps, SelectedCoversState>() {
                         props.selectedCovers.sortedBy {
                             it.imageSource
                         }.forEach { drawableImage ->
-                            val img = document.createElement("img") as Image
-                            img.onload = {
+                            var img = ImageCache[drawableImage.imageSource]
+                            if (img == null) {
+                                img = document.createElement("img") as Image
+                                img.onload = {
+                                    context.drawImage(img, drawableImage.x, drawableImage.y)
+                                    drawableImage.width = img.width
+                                    drawableImage.height = img.height
+                                    ImageCache.images[drawableImage.imageSource] = img
+                                    it
+                                }
+                                img.src = drawableImage.imageSource
+                            } else {
                                 context.drawImage(img, drawableImage.x, drawableImage.y)
-                                drawableImage.width = img.width
-                                drawableImage.height = img.height
-                                it
                             }
-                            img.src = drawableImage.imageSource
                         }
                     }
                 }
@@ -151,3 +157,14 @@ data class DrawableImage(
     var width: Int = 0,
     var height: Int = 0
 )
+
+/**
+ * Caches Image elements to prevent flickering and performance issues
+ */
+object ImageCache {
+    val images: MutableMap<String, Image> = mutableMapOf()
+    operator fun get(source: String) = images[source]
+    operator fun set(source: String, img: Image) {
+        images[source] = img
+    }
+}
