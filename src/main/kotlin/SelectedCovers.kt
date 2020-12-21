@@ -20,7 +20,9 @@ external interface SelectedCoversProps : RProps {
 }
 
 data class SelectedCoversState(
-    var clickedImage: DrawableImage? = null
+    var clickedImage: DrawableImage? = null,
+    var lastX: Double? = null,
+    var lastY: Double? = null
 ) : RState
 
 class SelectedCovers : RComponent<SelectedCoversProps, SelectedCoversState>() {
@@ -66,8 +68,8 @@ class SelectedCovers : RComponent<SelectedCoversProps, SelectedCoversState>() {
                         val event = it.asDynamic()
                         val target = it.target as HTMLCanvasElement
                         val rect = target.getBoundingClientRect()
-                        val clickedX = event.clientX - rect.left
-                        val clickedY = event.clientY - rect.top
+                        val clickedX = (event.clientX - rect.left) as Number
+                        val clickedY = (event.clientY - rect.top) as Number
                         state.clickedImage?.let { clickedImage ->
                             val canvas = it.target as HTMLCanvasElement
                             val context = canvas.getContext("2d") as CanvasRenderingContext2D
@@ -76,10 +78,19 @@ class SelectedCovers : RComponent<SelectedCoversProps, SelectedCoversState>() {
                                 clickedImage.width.toDouble(), clickedImage.height.toDouble()
                             )
 
-                            clickedImage.x = clickedX
-                            clickedImage.y = clickedY
-                            setState {
-                                this.clickedImage = clickedImage
+                            if (state.lastX == null || state.lastY == null) {
+                                setState {
+                                    this.lastX = clickedX.toDouble()
+                                    this.lastY = clickedY.toDouble()
+                                }
+                            } else {
+                                clickedImage.x += clickedX.toDouble() - state.lastX!!
+                                clickedImage.y += clickedY.toDouble() - state.lastY!!
+                                setState {
+                                    this.clickedImage = clickedImage
+                                    this.lastX = clickedX.toDouble()
+                                    this.lastY = clickedY.toDouble()
+                                }
                             }
                         }
                     }
@@ -87,6 +98,8 @@ class SelectedCovers : RComponent<SelectedCoversProps, SelectedCoversState>() {
                     onMouseUpFunction = {
                         setState {
                             this.clickedImage = null
+                            this.lastX = null
+                            this.lastY = null
                         }
                     }
                 }
