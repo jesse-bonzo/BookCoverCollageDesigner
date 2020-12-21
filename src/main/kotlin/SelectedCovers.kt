@@ -1,6 +1,7 @@
 import kotlinx.browser.document
 import kotlinx.html.js.onMouseDownFunction
 import kotlinx.html.js.onMouseMoveFunction
+import kotlinx.html.js.onMouseOutFunction
 import kotlinx.html.js.onMouseUpFunction
 import org.w3c.dom.CanvasRenderingContext2D
 import org.w3c.dom.HTMLCanvasElement
@@ -54,7 +55,7 @@ class SelectedCovers : RComponent<SelectedCoversProps, SelectedCoversState>() {
 
                         props.selectedCovers.sortedBy {
                             it.imageSource
-                        }.find {
+                        }.reversed().find {
                             clickedX >= it.x && clickedX <= it.width + it.x && clickedY >= it.y && clickedY <= it.height + it.y
                         }.let { clickedImage ->
                             console.log("clicked $clickedImage")
@@ -72,20 +73,28 @@ class SelectedCovers : RComponent<SelectedCoversProps, SelectedCoversState>() {
                         val clickedY = (event.clientY - rect.top) as Number
                         state.clickedImage?.let { clickedImage ->
                             val canvas = it.target as HTMLCanvasElement
-                            val context = canvas.getContext("2d") as CanvasRenderingContext2D
-                            context.clearRect(
-                                clickedImage.x, clickedImage.y,
-                                clickedImage.width.toDouble(), clickedImage.height.toDouble()
-                            )
-
                             if (state.lastX == null || state.lastY == null) {
                                 setState {
                                     this.lastX = clickedX.toDouble()
                                     this.lastY = clickedY.toDouble()
                                 }
                             } else {
-                                clickedImage.x += clickedX.toDouble() - state.lastX!!
-                                clickedImage.y += clickedY.toDouble() - state.lastY!!
+                                val deltaX = clickedX.toDouble() - state.lastX!!
+                                val deltaY = clickedY.toDouble() - state.lastY!!
+                                clickedImage.x += deltaX
+                                clickedImage.y += deltaY
+                                if (clickedImage.x < 0) {
+                                    clickedImage.x = 0.0
+                                }
+                                if (clickedImage.x > target.width - clickedImage.width) {
+                                    clickedImage.x = (target.width - clickedImage.width).toDouble()
+                                }
+                                if (clickedImage.y < 0) {
+                                    clickedImage.y = 0.0
+                                }
+                                if (clickedImage.y > target.height - clickedImage.height) {
+                                    clickedImage.y = (target.height - clickedImage.height).toDouble()
+                                }
                                 setState {
                                     this.clickedImage = clickedImage
                                     this.lastX = clickedX.toDouble()
@@ -102,11 +111,20 @@ class SelectedCovers : RComponent<SelectedCoversProps, SelectedCoversState>() {
                             this.lastY = null
                         }
                     }
+
+                    onMouseOutFunction = {
+                        setState {
+                            this.clickedImage = null
+                            this.lastX = null
+                            this.lastY = null
+                        }
+                    }
                 }
 
                 ref { ref ->
                     (ref as? HTMLCanvasElement)?.let { canvas ->
                         val context = canvas.getContext("2d") as CanvasRenderingContext2D
+                        context.clearRect(0.0, 0.0, canvas.width.toDouble(), canvas.height.toDouble())
                         props.selectedCovers.sortedBy {
                             it.imageSource
                         }.forEach { drawableImage ->
