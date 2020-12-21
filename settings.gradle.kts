@@ -1,3 +1,2 @@
-
-rootProject.name = "BookCollageGenerator"
+rootProject.name = "BookCoverCollageDesigner"
 
